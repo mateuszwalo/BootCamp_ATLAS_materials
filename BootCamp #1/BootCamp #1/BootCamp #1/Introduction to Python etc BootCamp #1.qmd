@@ -1,0 +1,367 @@
+---
+title: ""
+author: ""
+format: pdf
+editor: visual
+---
+
+# BootCamp ATLAS #1
+
+***Author : Mateusz Walo & Dominila Stępniewska***
+
+#### Wstęp do Pythona ze specjalizacją w uczeniu maszynowym
+
+##### Instalacja Pythona
+
+Należy wejść na stronę internetową <https://www.python.org/downloads/> i wybrać wersję odpowiednią dla Twojego systemu operacyjnego i wersję która Ci odpowiada. Załóżmy że interesuje nas `Python 3.13.0` i korzystamy z systemu operacyjnego Windows
+
+![](python_install.png)
+
+Po pobraniu pliku przechodzi przez każdy elementn instalki zostawiając basic ustawienia.
+
+Aby sprawdzić czy Python zainstalował się poprawnie, otwórzmy wiersz poleceń (`Win+R` + `cmd`)
+
+i wpiszmy następującą komendę
+
+`python –-version` alternatywnie `py –-version` zależnie od wersji z jakiej korzystamy, jeśli korzystamy z Pythona3 `python3 --version` analogicznie
+
+![](cmd.png){fig-align="center"}
+
+##### Jupyter Lab
+
+Aby w pełni wykorzystać potencjał Pythona w branżach Data Science i Machine Learning potrzebujemy frameworku z którego będziemy korzystać w celu generowania plików `.ipynb`. Na sam początek sugeruję aby tym frameworkiem był `Jupyter Lab` aby go zainstalować należy otworzyć ponownie wiersz poleceń i wpisać polecenie `pip install jupyter lab` w przypadku gdy nie zadziała ta komenda i masz inną wersję Pythona wpisz `py -m pip install jupyter lab`. Wpisujemy polecenie i klikamy `Enter` jeśli posiadamy połączenie z siecią powinno się rozpocząć pobieranie które będzie wyglądać jak cyferki z matrixa 😉. Jak zakończy się instalacja należy otworzyć naszego Jupytera poleceniem w terminalu `jupyter lab` ewentualnie `py -m jupyter lab` zależy z której opcji instalowania korzystaliśmy. Powinno to wyglądać nasstępująco.
+
+![](jl.png){fig-align="center"}
+
+Po wykonaniu się polecenia na lokalnym porcie powinien się nam otworzyć Jupyter Lab. Przeważnie defaultowo jest to port 8888. (U mnie ze względu na ustawienia Dockerowe jest to 8889 bo port 8888 zajmuje mi jeden notatnik z innego kontenera)
+
+![](jl1.png){fig-align="center"}
+
+Jeśli widzisz na swoim monitorze to co powyżej to Gratuluję! 🥳🥳🥳 Zainstalowałeś i uruchomiłeś Jupyter Lab.
+
+##### Wstęp do bibliotek w Pythonie
+
+Już macie doświadczenie w instalacji czegoś za pomocą metody `pip` więc teraz przez analogię do instalacji Jupyter Lab instalujemy biblioteki Pandas i Numpy przez komende `pip install pandas numpy` albo `py -m pip install pandas numpy` możemy robić to w wierszu poleceń albo wykorzystać do tego Jupter Lab, wpisując te same polecenie tylko z wykrzyknikiem `!` przed poleceniem w nowym chunku kodowym i klikając `Ctrl+Enter`. Dzięki tej metodzie możemy wykonywać polecenia bashowe z poziomu Pythona, jest to wygodne rozwiązanie jeśli pracujemy lokalnie 😉
+
+Biblioteki `Pandas` i `Numpy` odowiadają za podstawowe manipulacje macierzowe, operacje na ramkach danych, arytmetyke i algebrę macierzy, posiadają przydatne funckje statystyczne które przydają się w późniejszych etapach pracy.
+
+**Dla dociekliwych:**
+
+*W przyszłości zapoznamy się z biblioteką `sckit-learn` dzięki której będizemy mogli tworzyć klasyczne modele uczenia maszynowego, omówieniem tej biblioteki zajmiemy się na `BootCampie #2` lecz zainstalować możecie ją już teraz lokalnie za pomocą metody `pip`*.
+
+***Opcjonalnie dla dociekliwych:***
+
+*Jeśli posiadasz więcej czasu i wolnego interentu możesz zaintslować w lokalnym środowisku również bibliotekę `tensorflow` która posłuży nam na `BootCamp#3` do toworzenia modeli uczenia głębokiego - sieci neuronowych, dzięki swojemu API `Keras`*
+
+***Dla super dociekliwych:***
+
+*W przyszłości możecie spotkać się z biblioteką `Polars` (* <https://pola.rs> )*która pełni analogiczne funkcje jak `Pandas` i umożliwia na szybszą pracę na większych zbiorach danych, dociekliwi mogą zpaoznać się z nią i dowiedzieć się czemu jest w stanie szybciej wczytywać pliki i operacje na dużych ramkach wykonuje szybciej 😉*
+
+##### Zacznijmy pracę nad danymi w Pythonie! 😄
+
+```{python}
+#Importowanie bibliotek w Python z wykorzystaniem aliasów
+
+import pandas as pd
+import numpy as np
+```
+
+Tworzenie listy numerycznej typu np. `int`
+
+```{python}
+
+numbers = range(1,100,5) 
+
+#Funckja range() od kąd zaczynamy, do ile, co ile
+```
+
+```{python}
+#Funkcja series tworzy nam szereg z listy numbers 
+
+pd.Series(numbers)
+```
+
+Tworzenie listy wyrażeń typu `string`
+
+```{python}
+#Analogicznie możemy postępować z napisami ;)
+
+strings = "Koło" , "ATLAS", "to", "najlepsze", "koło","na","Pollub"
+pd.Series(strings)
+```
+
+```{python}
+#oraz z listami zawierającymi dowolne elementy ;) róznych typów
+
+abstract_list= "ATLAS" , 12, 96.69, -3.345, "Pollub", 12.432
+pd.Series(abstract_list)
+```
+
+Zaraz przed wami pierwsze kolokwia więc zróbmy tabele obrazującą wasze możliwe przyszłe wyniki i na tej podstawie się czegoś nauczmy
+
+```{python}
+procenty_z_kolosa = [93,50,73,98]
+przedmioty = ['Funckje elementarne',
+'Logika','Analiza matematyczna',
+'Algebra liniowa']
+pd.Series(procenty_z_kolosa, index=przedmioty) #pamietaj o przecinku tutaj ;)
+```
+
+Alternatywny sposób 😉
+
+```{python}
+#Sposób #2
+
+data ={'Funckje elementarne':93,
+'Logika':50,
+'Analiza matematyczna':73,
+'Algebra liniowa':98} 
+#wstawiamy tutaj nawiasy klamrowe 
+#jesli robimy w ten sposob a nie [] pamietaj !
+pd.Series(data)
+```
+
+Zapomnieliśmy o wstępie do programowania i co teraz?
+
+```{python}
+przedmioty = ['Funckje elementarne',
+'Logika',
+'Analiza matematyczna',
+'Wstęp do programowania',
+'Algebra liniowa']
+wyniki =pd.Series(data, index=przedmioty)
+wyniki
+```
+
+Pokazuje nam `NaN` jako że nie zedfiniowalismy tej danej w `data`, skrót `NaN` oznacza `Not a number` i często wskazuje nam na brak danych.
+
+```{python}
+#Funkcja isnull()  pozwala nam na sprawdzenie braków danych w ramce danych
+
+wyniki.isnull()
+```
+
+Wasz kolega się pyta was o to z jakis kolosów macie piątkę i chcecie użyć do tego Pythona?
+
+Żaden problem, możemy przeszukiwać potrzebne nam rekordy w tabeli za pomocą operatorów logicznych
+
+```{python}
+wyniki[wyniki>90]
+```
+
+Dobra zdaliście już kolokwium z wstępi do programowania i chcecie zastąpić `NaN` waszym wynikiem, oto jak to zrobić :)
+
+```{python}
+wyniki['Wstęp do programowania']=78
+wyniki
+```
+
+Kolega się was pyta czy to prawda że z funkcji elementarnych macie 50%
+
+Nic prostszego :D
+
+```{python}
+wyniki['Funckje elementarne']==50
+```
+
+#### Sortowanie danych
+
+```{python}
+values=pd.Series([-12,534.423,
+53,28,np.nan, 35,9,43,np.nan])
+values
+```
+
+```{python}
+#Sortowanie rosnąco
+
+values.sort_values(ascending = True)
+```
+
+```{python}
+#Sortowanie malejąco
+
+values.sort_values(ascending = False)
+```
+
+***Uwaga:** Zauważ że wartości `NaN` wędrują na sam koniec, ponieważ nie są w żaden sposób określone do porównywania*
+
+```{python}
+#Sortowanie list stringów
+
+string_values=pd.Series(['q2','1','ATLAS',
+'BajoJajo','LLM','AULA numer 1',
+  'Ja ci dam bajojajo...'])
+string_values
+```
+
+```{python}
+#Analogicznie, posługując się kolejnością alfabetyczną
+
+string_values.sort_values(ascending = True)
+```
+
+```{python}
+string_values.sort_values(ascending = False)
+```
+
+#### Ramki danych
+
+Najwięcej czasu w swojej karierze studenckiej spędzicie na danych właśnie w formacie ramek danych w postaci np. danych typu csv, xlsx etc.
+
+```{python}
+#Wracając do 1 semestru tworzymy ramkę danych z naszymi ocenami ;)
+
+data = {'Przedmioty':
+  ['Algebra liniowa',
+'Analiza matematyczna',
+'Geometria analityczna',
+'Wstęp do programowania',
+'Funkcje elementarne',
+'Logika'],
+        'Punkty z kolokwium' :
+          [73,78,69,70,93,52],
+        'Oceny':
+          [4.0,4.0,3.5,4.0,5.0,3.0]}
+df=pd.DataFrame(data)
+#Funkcja pandas.DataFrame() tworzy nam ramkę danych, powołując się na poprzednie sposoby tworzenia pandas.Series() działają tutaj analogicznie
+df
+```
+
+Ramki danych są najbardziej przyjazną formą danych na sam początek dlatego na niej skupimy się najbardziej, właśnie stowrzyliśmy własną mini ramkę, i mamy ogólny pogląd jak będą one wyglądać.
+
+Teraz przejdźmy do prawdziwych danych 😉
+
+```{python}
+#Za pomocą funkcji pandas.read_csv() 
+#wczytujemy dane tabelaryczne do ramki danych
+
+df=pd.read_csv("healthcare-dataset-stroke-data.csv")
+```
+
+```{python}
+#Funckja head() wywołuje pierwszych 5 obserwacji
+#analogicznie tail() wywołuje 5 ostatnich
+#a sample() wywołuje 5 losowych obserwacji
+#funkcja info() powzala na wyswietlenie informacji o zbiorze danych
+#Funckja columns() pokazuje kolumny
+
+df.info()
+```
+
+```{python}
+#.T robi nam transpozycje, w cely wizulanym bo renderuje w pdf
+
+df.head().T
+```
+
+```{python}
+#pokazuje statystyki opisowe
+df.describe()
+```
+
+Widzimy jak prezentuję się bardziej okazały zbiór niż oceny z kolokwiów, obserwacji i kolumn jest nieco więcej ;)
+
+```{python}
+#Zwraca informację o typach danych
+
+df.dtypes
+```
+
+```{python}
+#Zwraca informacje o kształcie ramki danych
+
+df.shape
+```
+
+##### Manipulacja danymi
+
+Wyobraź sobie taką sytacje dzwoni do Ciebie szef i mówi że zapomniał wysłać Ci dane o jednej dodatkowej kolumny o stosunku `avg_glucose_level` do `bmi` i to do kwadratu!
+
+Jak sobie z tym poradzić?
+
+Zadzwonić do szefa i powiedzieć mu że jest debilem że tego nie wysłał i stracić pracę :)
+
+ALBO
+
+Dodać tą kolumnę samemu dzięki bibliotecw `Pandas`
+
+```{python}
+df["Nowa_kolumna"]=(df["avg_glucose_level"]/df["bmi"])**2
+```
+
+```{python}
+df["Nowa_kolumna"].sample(5)
+```
+
+#### Wstęp do GitHuba
+
+Aby pobrać GitHub Desktop należy wejść na stronę <https://desktop.github.com/download/> i wybrać wersję odpowiednią dla Twojego systemu operacyjnego.
+
+![](github1.png){fig-align="center"}
+
+Po pobraniu, instalujesz GitHub Desktop i otwierasz aplikację. Jeśli masz konto na GitHub, logujesz się na nie, jeśli nie, tworzysz nowe konto.
+
+![](github2.png){fig-align="center"}
+
+Po połączeniu kluczy SSH z aplikacją możemy publikować na nim w repozytoriach własne projekty :D
+
+Instrukcja do połączenia kluczy: [https://docs.github.com/en/enterprise-cloud\@latest/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account](https://docs.github.com/en/enterprise-cloud@latest/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)
+
+#### Jak stworzyć nowe repozytorium?
+
+![](repo.png)
+
+Wchodzimy na naszym profilu w zakładkę`Repositories` gdzie możemy po kliknieciu `New` stworzyć nowe repozytorium.
+
+![](repo1.png)
+
+Możemy, skorzystać z aplikacji Desktopowej gdzie możemy zrobić to poprzez analogię. Możemy skonfigurować folder w którym tworzymy nasz projekt z aplikacją i wysyłać commity bezpośrednio z niego za pomocą komend bashowych git `push` i `pull`, lub aplikacji Desktopowej.
+
+Jeśli chcemy stworzyć projekt bazujący na czyimś repozytroium starterowym, lub po prostu uczymy się (ewentualnie kradniemy czyjś kod, ale ciiiii nikomu nie mówcie) to możemy skopiować czyjes repozytroium za pomocą polecenia `git clone` + nazwa repozytorium. Pełną komendę do skopiowania repozytorium jakie nas interesuje znajdziemy bezpośrednio w repozytrium. Załóżmy że bardzo wam się spodobała moja apka dla NASA 😎 i chcecie ukraść do niej kod, całę środowisko etc. To wchodzicie na mojego githuba, szukacie apki NASA i robicie dokładnie jak pokazałem poniżej:
+
+![](repo2.png)
+
+i po wpisaniu komendy która się wyświetla w bashu, skopiujecie moją pracę, w celach oczywiście naukowych ta kradzież ;).
+
+Ewentulanie wersja mniej informatyczna można pobrać po prostu ZIP\`a i stworzyć środowisko w Anacondzie i wyjdzie na to samo ;)
+
+#### Wstęp do Dockera
+
+Docker to platforma do konteneryzacji, która pozwala na tworzenie, zarządzanie i uruchamianie aplikacji w izolowanych środowiskach, zwanych kontenerami. Dzięki Dockerowi można tworzyć pakiety aplikacji wraz z wszystkimi niezbędnymi zależnościami (takimi jak biblioteki, pliki konfiguracyjne czy zależności systemowe), co umożliwia uruchamianie ich w różnych środowiskach bez ryzyka konfliktów.
+
+Obraz Docker zawiera wszystko, co jest potrzebne do uruchamienia oprogramowania: kod, środowisko uruchomieniowe, sterowniki, narzędzia, skrypty, biblioteki, wdrożenia i inne.
+
+Kontener Docker jest działającą instancją obrazu Docker. W przeciwieństwie do tradycyjnej wirtualizacji z hipernadzorcą typu 1 lub 2, kontener Docker działa na jądrze hostującego systemu operacyjnego. W obrazie Docker nie ma osobnego systemu operacyjnego.
+
+![](docker.png){fig-align="center"}
+
+I to na tyle z teorii Dockerowej. Teraz ogarniemy sobie Dockera na własnym kompie krok po kroku.
+
+##### Uwaga: Jeśli korzystacie z Windowsa to musicie zainstalować sobie WSL (Windows Subsystem for Linux) jeśli tego nie posiadacie jeszcze, ale na systemach operacyjnych u Dr. Zaburko już to powinno być i przydałaby się jakaś basic licencja Ubuntu na przyszłośc ;).
+
+Jeśli korzystacie z Linuxa to wręcz cudownie w tym przypadku, podejrzewam że większość z was ma Windowas więc zaczniemy od sprawdzenia wersji `WSL`. Jeśli widzicie na ekranie to co ja to jesteśmy w domu :D
+
+![](wsl.png)
+
+Następnie pobieramy `Docker Desktop` odpowiedni do naszego systemu operacyjnego
+
+LINK: <https://www.docker.com/products/docker-desktop/>
+
+Przechodzimy instalator krok po kroku i mam zainstalowanego Dockera.
+
+Możemy przeglądać gotowe obrazy na `Docker Hub`
+
+#### Podstawowe komendy w Dockerze:
+
+-   `docker pull <nazwa_obrazu>` – pobiera obraz z Docker Hub.
+
+-   `docker build -t <nazwa_obrazu> .` – buduje obraz z Dockerfile.
+
+-   `docker run <nazwa_obrazu>` – uruchamia kontener na podstawie obrazu.
+
+-   `docker ps` – wyświetla uruchomione kontenery.
+
+-   `docker stop <id_kontenera>` – zatrzymuje działający kontener.
+
+W tym miejscu nastąpi żywa demonstracja działania jak się pracuje z Dockerem :D

@@ -1,0 +1,488 @@
+---
+title: ""
+format: html
+editor: visual
+self-contained: true
+---
+
+# BootCamp ATLAS #2
+
+***Author : Dominika Stępniewska***
+
+## Podział modeli uczenia maszynowego
+
+Modele uczenia maszynowego możemy podzielić na 3 podstawowe typy:
+
+-   nadzorowane - dane uczące przekazywane algorytmowi zawierają dołączone rozwiązania problemu (etykiety).
+
+*Przykład:* Przewidywanie cen mieszkań lub klasyfikowanie spamu.
+
+-   nienadzorowane - dane uczące są nieoznakowane.
+
+*Przykład:* Określenie grup podobnych użytkowników odwiedzających Twój blog za pomocą analizy skupień.
+
+-   uczenie przez wzmacnianie - system uczący (agent) obserwuje środowisko, dobiera i wykonuje czynności, a także odbiera nagrody lub kary. Musi nauczyć się najlepszej strategii (polityki), aby uzyskiwać jak najwyższą nagrodę.
+
+*Przykład*: Program AlphaGo firmy DeepMind, który w 2017 roku pokonał ówczesnego mistrza w grę Go
+
+[![](ml_types.png){fig-align="center"}](https://www.researchgate.net/figure/The-main-types-of-machine-learning-Main-approaches-include-classification-and-regression_fig1_354960266)
+
+Regresję i klasyfikację zaliczamy do kategorii uczenia nadzorowanego.
+
+**Dla dociekliwych:** Wśród kategorii uczenia maszynowego możemy wyróżnić także uczenie półnadzorowane i uczenie samonadzorowane. Więcej: <https://medium.com/imagescv/learning-supervised-unsupervised-self-supervised-semi-supervised-aa0a5d6d7010>.
+
+## Regresja i klasyfikacja - porównanie
+
+| Regresja                                                                   | Klasyfikacja                                                                    |
+|:---------------------------------------------------------------------------|:--------------------------------------------------------------------------------|
+| przewidywanie wartości numerycznej lub ciągłej                             | przewidywanie wartości kategorycznych (klas)                                    |
+| problemy takie jak przewidywanie cen mieszkań, przewidywanie ilości opadów | problemy takie jak klasyfikacja spamu, przewidywanie chorób                     |
+| przykładowe miary dopasowania modelu: $R^2, RMSE, MAE$                     | przykładowe miary dopasowania modelu: dokładność, precyzja, czułość, krzywa ROC |
+| przykładowe algorytmy: regresja liniowa, regresja wielomianowa             | przykładowe algorytmy: regresja logistyczna, naiwny klasyfikator bayesowski     |
+
+Algorytmy takie jak drzewo decyzyjne, las losowy, k-najbliższych sąsiadów czy maszyna wektorów nośnych (SVM) mogą być używane zarówno do zagadnień regresyjnych, jak i klasyfikacyjnych.
+
+### Jak dzielimy modele klasyfikacyjne?
+
+Modele klasyfikacyjne dzielimy na modele z binarną zmienną wynikową (np. czy pacjent jest chory na COVID) oraz ze zmienną wynikową wielostanową (np. ocena z analizy matematycznej na koniec semestru). W zależności od rodzaju modelu, stosujemy różne miary dopasowania.
+
+## Modele w praktyce
+
+### Regresja
+
+#### Regresja liniowa
+
+Jednym z modeli służącym do zagadnień regresyjnych jest model regresji liniowej. Regresja liniowa wyraża się wzorem
+
+$$
+y_i = \beta_0 + \beta_1x_{i1}. + ... + \beta_px_{ip} + \varepsilon_i
+$$
+
+$y_i$ - zmienna zależna
+
+$\beta_0$ - wyraz wolny modelu
+
+$\beta_1, ..., \beta_p$ - współczynniki regresji
+
+$x_i1, ..., x_ip$ - zmienne niezależne dla $i$-tej obserwacji
+
+$\varepsilon_i$ - składnik losowy (błąd)
+
+Zbudujmy model regresji liniowej, w którym będziemy przewidywać długość głowy oposa na podstawie jego pozostałych wymiarów. Skorzystamy ze zbioru danych <https://www.kaggle.com/datasets/abrambeyer/openintro-possum>.
+
+![](possum.jpg){fig-align="center"}
+
+```{python}
+# Potrzebne biblioteki
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
+from xgboost import XGBRegressor
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
+from xgboost import XGBClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import recall_score
+from imblearn.metrics import specificity_score
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import ConfusionMatrixDisplay
+```
+
+```{python}
+# Wgrywamy dane 
+data = pd.read_csv('possum.csv')
+data.head()
+```
+
+```{python}
+# Usuwamy braki danych
+data = data.dropna()
+
+# Usuwamy zmienną 'case' - identyfikator oposa
+data = data.drop('case', axis=1)
+
+# Usuwamy zmienne, które nie są wymiarami oposa
+data = data.drop(['site','Pop','sex','age'], axis=1)
+```
+
+```{python}
+# X - zmienne niezależne (predyktory), y - zmienna zależna (wynikowa)
+X = data.drop('hdlngth', axis=1)
+y = data['hdlngth']
+
+# Dzielimy zbiór na uczący i testowy
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+```
+
+```{python}
+# Tworzymy model regresji liniowej
+lr_model = LinearRegression()
+
+# Trenujemy model na danych treningowych
+lr_model.fit(X_train, y_train)
+
+# Przewidujemy wartość zmiennej zależnej dla danych testowych
+y_pred_lr = lr_model.predict(X_test)
+```
+
+#### Miary jakości dopasowania modelu
+
+-   Współczynnik determinacji $R^2$
+
+Informuje o tym, jak duża część zmienności zmiennej zależnej jest wyjaśniana przez zmienne niezależne. Przyjmuje wartości w przedziale $[0,1]$, im większa wartość, tym model jest lepiej dopasowany.
+
+$$
+R^2 = 1 -\frac{\sum_{i}{(y_i-\hat{y_i})^2}}{\sum_{i}{(y_i-\bar{y})^2}}
+$$
+
+$y_i$ – $i$-ta wartość obserwowana
+
+$\hat{y_i}$ – $i$-ta wartość przewidywana na podstawie modelu
+
+$\bar{y}$ – średnia zmiennej wynikowej
+
+```{python}
+r2_score(y_test, y_pred_lr)
+```
+
+-   Pierwiastek błędu średniokwadratowego - $RMSE$
+
+Określa, o ile przeciętnie wartości empiryczne zmiennej objaśnianej odchylają się od wartości teorytycznych tej zmiennej, obliczonej na podstawie zbudowanego modelu. Im mniejsza wartość $RMSE$, tym model jest lepiej dopasowany.
+
+$$
+RMSE = \sqrt{\frac{\sum_{i=1}^{n}{(y_i-\hat{y}_i)^2}}{n}}
+$$
+
+$n$ - liczebność zbioru
+
+```{python}
+np.sqrt(mean_squared_error(y_test, y_pred_lr))
+```
+
+-   Średni błąd bezwzględny - $MAE$
+
+Informuje, o ile średnio rzeczywiste wartości zmiennej objaśnianej różnią się, co do bezwzględnej wartości, od prognoz. Im mniejsza wartość $MAE$, tym model jest lepiej dopasowany.
+
+$$
+MAE = \frac{\sum_{i=1}^{n}{|y_i-\hat{y_i}|}}{n}
+$$
+
+```{python}
+mean_absolute_error(y_test, y_pred_lr)
+```
+
+#### XGBoost
+
+Extreme Gradient Boosting (XGBoost) to algorytm oparty na wzmacnianiu gradientowym. Może być stosowany zarówno do zagadnień regresji jak i klasyfikacji.
+
+```{python}
+# Tworzymy model XGBoost
+xgbr_model = XGBRegressor()
+
+xgbr_model.fit(X_train, y_train)
+
+y_pred_xgbr = xgbr_model.predict(X_test)
+```
+
+Miary dopasowania modelu
+
+```{python}
+r2_score(y_test, y_pred_xgbr)
+```
+
+```{python}
+np.sqrt(mean_squared_error(y_test, y_pred_xgbr))
+```
+
+```{python}
+mean_absolute_error(y_test, y_pred_xgbr)
+```
+
+Porównajmy otrzymane modele
+
+|        | Regresja liniowa | XGBoost |
+|--------|------------------|---------|
+| $R^2$  | 0.73             | 0.64    |
+| $RMSE$ | 1.90             | 2.19    |
+| $MAE$  | 1.44             | 1.69    |
+
+Na podstawie powyższych metryk, który model jest lepiej dopasowany do danych?
+
+Stworzymy wykresy wartości dopasowanych i obserwowanych obu modeli.
+
+```{python}
+# Wykres punktowy
+plt.scatter(y_test, y_pred_lr, color='blue')
+
+# Prosta na wykresie
+plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red', linestyle='--', label='Idealne dopasowanie')
+
+# Etykiety osi x i y, tytuł, legenda, siatka
+plt.xlabel('Wartości obserwowane')
+plt.ylabel('Wartości dopasowane')
+plt.title('Wykres wartości dopasowanych i obserwowanych modelu regresji liniowej')
+plt.legend()
+plt.grid()
+
+# Wyświetlenie wykresu
+plt.show()
+```
+
+```{python}
+plt.scatter(y_test, y_pred_xgbr, color='blue')
+plt.plot([min(y_test), max(y_test)], [min(y_test), max(y_test)], color='red', linestyle='--', label='Idealne dopasowanie')
+plt.xlabel('Wartości obserwowane')
+plt.ylabel('Wartości dopasowane')
+plt.title('Wykres wartości dopasowanych i obserwowanych modelu XGBoost')
+plt.legend()
+plt.grid()
+plt.show()
+```
+
+### Klasyfikacja
+
+Zajmiemy się problemem klasyfikacji. Naszym celem jest zbudowanie modelu, który pozwoli nam przewidzieć czy dana osoba woli góry czy morze, na podstawie jej różnych cech, m.in. wieku, wykształcenia, częstotliwości podróżowania czy ulubionej pory roku. Jest to zagadnienie klasyfiakcji binarnej, ponieważ zmienna wynikowa ma 2 wartości - góry i morze. Skorzystamy ze zbioru <https://www.kaggle.com/datasets/jahnavipaliwal/mountains-vs-beaches-preference>.
+
+![](sea_mountains.jpg){fig-align="center"}
+
+#### Drzewo decyzyjne
+
+Drzewo decyzyjne to hierarchiczna struktura składająca się z korzenia (*root*), węzłów (*nodes*) i liści (*leaves*). Korzeń to początkowy węzeł drzewa, z którego poprzez podziały powstają kolejne węzły potomne. Aby zbudować drzewo, algorytm przeszukuje wszystkie możliwe testy i znajduje ten, który zawiera najwięcej informacji o zmiennej docelowej. Drzewo dąży do takiego podziału, by kolejne węzły były jak najbardziej jednorodne ze względu na zmienną wynikową.
+
+```{python}
+data2 = pd.read_csv('mountains_vs_beaches_preferences.csv')
+data2.head()
+```
+
+```{python}
+# Sprawdzamy, czy zbiór danych zawiera braki
+data2.isnull().sum()
+```
+
+```{python}
+# Sprawdzamy typy danych
+data2.info()
+```
+
+```{python}
+X = data2.drop('Preference', axis=1)
+y = data2['Preference']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+```
+
+```{python}
+# Tworzymy model drzewa decyzyjnego
+dt_model = DecisionTreeClassifier()
+```
+
+```{python}
+# dt_model.fit(X_train, y_train)
+```
+
+Przy próbie wytrenowania modelu na danych treningowych pojawia się błąd:
+
+![](error.png){fig-align="center"}
+
+Jak widać powyżej (sprawdzenie typów danych), zmienne `Gender`, `Education_Level`, `Preferred_Activities`, `Location` oraz `Favorite_Season` są typu object. Algorytm drzewa decyzyjnego obsługuje zarówno zmienne numeryczne jak i kategoryczne, jednak zmienne kategoryczne powinny zostać zakodowane do numerycznej reprezentacji. W tym celu zastosujemy kodowanie one-hot encoding.
+
+#### One-hot encoding
+
+Sprawdźmy jak działa kodowanie na przykładzie zmiennych kategorycznych `Location` i `Favorite_Season`. Przed kodowaniem, każda z nich jest reprezentowana przez jedną zmienną, odpowiednio z 3 (`urban`, `suburban`, `rural`) i 4 (`spring`, `summer`, `fall`, `winter`) poziomami.
+
+![](before_onehot.png)
+
+```{python}
+# Kodowanie zmiennych kategorycznych
+one_hot_data = pd.get_dummies(data2, columns = ['Gender','Education_Level','Preferred_Activities','Location','Favorite_Season'])
+```
+
+Zmienne po kodowaniu:
+
+![](after_onehot.png)
+
+W wyniku kodowania one-hot, każda cecha jest reprezentowana przez liczbę zmiennych binarnych równą liczbie kategorii.
+
+Po takim przekształceniu możemy kontynuować tworzenie modeli.
+
+```{python}
+X = one_hot_data.drop('Preference', axis=1)
+y = one_hot_data['Preference']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+```
+
+```{python}
+dt_model = DecisionTreeClassifier()
+
+dt_model.fit(X_train, y_train)
+
+y_pred_dt = dt_model.predict(X_test)
+```
+
+#### Las losowy
+
+Las losowy to zestaw drzew decyzyjnych, w którym każde różni się nieco od pozostałych. Każde drzewo może stosunkowo dobrze prognozować, ale prawdopodobnie będzie nadmiernie dopasowywać się do części danych. To nadmierne dopasowanie można zmniejszyć budując wiele drzew (z których wszystkie działają dobrze i są na różne sposoby nadmiernie dopasowane) i uśredniając ich wyniki.
+
+```{python}
+rf_model = RandomForestClassifier()
+
+rf_model.fit(X_train, y_train)
+
+y_pred_rf = rf_model.predict(X_test)
+```
+
+#### Maszyna wektorów nośnych SVM
+
+Istotą metody SVM jest znalezienie wektorów nośnych, definiujących hiperpowierzchnie optymalnie separujące obiekty w homogeniczne grupy.
+
+```{python}
+svm_model = SVC()
+
+svm_model.fit(X_train, y_train)
+
+y_pred_svm = svm_model.predict(X_test)
+```
+
+#### Naiwny klasyfikator Bayesa
+
+Naiwny klasyfikator Bayesa to technika klasyfikacji, która opiera się na podejściu probabilistycznym i rozkładzie gaussowskim. Zakłada, że każdy predyktor ma niezależną zdolność przewidywania zmiennej wyjściowej.
+
+```{python}
+nb_model = GaussianNB()
+
+nb_model.fit(X_train, y_train)
+
+y_pred_nb = nb_model.predict(X_test)
+```
+
+#### XGBoost
+
+```{python}
+xgbc_model = XGBClassifier()
+
+xgbc_model.fit(X_train, y_train)
+
+y_pred_xgbc = xgbc_model.predict(X_test)
+```
+
+#### Miary jakości dopasowania modelu
+
+Do oceny jakości dopasowania modelu użyjemy następujących miar:
+
+-   Dokładność (Accuracy) - informuje o odsetku poprawnie zaklasyfikowanych obserwacji.
+
+$$
+ACC = \frac{TP+TN}{P+N}
+$$
+
+$TP$ - liczba poprawnie zaklasyfikowanych pozytywnych przypadków
+
+$TN$ - liczba poprawnie zaklasyfikowanych negatywnych przypadków
+
+$P$ - liczba rzeczywistych pozytywnych przypadków
+
+$N$ - liczba rzeczywistych negatywnych przypadków
+
+Dokładność możemy obliczyć za pomocą funkcji `accuracy_score(y_true, y_pred)`, gdzie `y_true` to rzeczywiste wartości, a `y_pred` to wartości przewidziane przez model.
+
+-   Czułość (Recall) - stosunek liczby poprawnie zaklasyfikowanych pozytywnych przypadków do liczby rzeczywistych pozytywnych przypadków
+
+$$
+TPR = \frac{TP}{P}
+$$
+
+Obliczamy za pomocą funkcji `recall_score()`
+
+-   Swoistość (Specificity) - stosunek liczby poprawnie zaklasyfikowanych negatywnych przypadków do liczby rzeczywistych negatywnych przypadków
+
+$$
+TNR = \frac{TN}{N}
+$$
+
+Obliczamy za pomocą funkcji `specificity_score().`
+
+Napiszemy teraz funkcję, dzięki której obliczymy powyższe miary dla wszystkich pięciu modeli.
+
+```{python}
+# Funkcja, która jako argumenty przyjmuje rzeczywiste wartości zbioru testowego oraz wartości przewidziane przez model
+
+def cl_metrics(y_true, y_pred):
+  accuracy = round(accuracy_score(y_true, y_pred),2)
+  recall = round(recall_score(y_true, y_pred),2)
+  specificity = round(specificity_score(y_true, y_pred),2)
+  return accuracy, recall, specificity
+
+# round(x, 2) - zaokrąglamy x do 2 miejsc po przecinku
+```
+
+```{python}
+# Tworzymy słownik, w którym kluczem jest nazwa modelu, a wartością - wartości przewidziane przez model
+cl_models = {'DT': y_pred_dt,
+             'RF': y_pred_rf,
+             'SVM': y_pred_svm,
+             'NB': y_pred_nb,
+             'XGB': y_pred_xgbc}
+```
+
+```{python}
+# Tworzymy pustą listę, w której zapiszemy wyniki
+results = []
+
+# Za pomocą pętli, obliczamy metryki dla wszystkich modeli (elementów słownika) przy użyciu wcześniej zdefiniowanej funkcji, a następnie dopisujemy wyniki do listy
+
+for model, y_pred in cl_models.items():
+  accuracy, recall, specificity = cl_metrics(y_test, y_pred)
+  results.append({
+    'Model': model,
+    'Accuracy': accuracy,
+    'Recall': recall,
+    'Specificity': specificity
+  })
+```
+
+```{python}
+# Wyświetlamy listę jako ramkę danych
+pd.DataFrame(results)
+```
+
+Modelem najlepiej dopasowanym do danych jest XGBoost, a najgorzej - maszyna wektorów nośnych SVM. Stworzymy funkcję, za pomocą której wyświetlimy macierz pomyłek dla każdego modelu.
+
+```{python}
+# Funkcja jako argumenty przyjmuje wartości rzeczywiste, wartości przewidywane przez model oraz tytuł
+
+def plot_confmat(y_test, y_pred, title):
+
+  # Tworzymy tablicę pomyłek
+  cm = confusion_matrix(y_test, y_pred)
+  
+  # Tworzymy macierz i ją wyświetlamy
+  cm_disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+  cm_disp.plot(cmap = plt.cm.Blues)
+  plt.title(title)
+  plt.show()
+```
+
+```{python}
+# Za pomocą pętli wywołujemy funkcję dla każdego z pięciu modeli
+for model, y_pred in cl_models.items():
+  plot_confmat(y_test, y_pred, title=f'Confusion Matrix for {model}')
+```
+
+*Interpretacja na przykładzie macierzy pomyłek modelu XGBoost (XGB)*: Model poprawnie przewidział 7840 wartości negatywnych jako negatywne i 2622 wartości pozytywne jako pozytywne. W 16 przypadkach model przewidział wartość negatywną, a rzeczywista wartość była pozytywna. W 11 przypadkach model przewidział wartość pozytywną, a rzeczywista wartość była negatywna.
+
+## 
+
+## Źródła
+
+-   "Machine learning, Python i data science. Wprowadzenie" Andreas Müller, Sarah Guido
+-   <https://dax44-datamining.netlify.app/>
+-   <https://majerek.quarto.pub/metody-walidacji-modeli-statystycznych/>
